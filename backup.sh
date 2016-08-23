@@ -66,12 +66,14 @@ check_env() {
 }
 
 backup_sql() {
-  log_info Backup...
   local DATE=$(date +%Y%m%d-%H%M%S)
   local DUMP_NAME="${NAME}_${DATE}.tar.bz2"
+  local FILE_NAME="/backups/${FULLNAME:-$DUMP_NAME}"
+
+  log_info Backuping mysql into ${FILE_NAME} ...
 
   set +u
-  mysqldump -q -h ${HOST} --single-transaction -A --user=${USER} --password=${PASSWORD} &> /tmp/dump.log | pbzip2 > /backups/${FULLNAME:-$DUMP_NAME} 
+  mysqldump -q -h ${HOST} --single-transaction -A --user=${USER} --password=${PASSWORD} &> /tmp/dump.log | pbzip2 > ${FILE_NAME}
   if [ $? -ne 0 ]; then 
     cat /tmp/dump.log
     exit $1
