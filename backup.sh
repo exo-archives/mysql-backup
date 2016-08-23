@@ -53,7 +53,12 @@ check_env() {
     error=true
   fi
 
-  NAME="${NAME:-db}"
+  if [ -z "${DATABASE}" ]; then
+    log_error "DATABASE is mandatory"
+    error=true
+  fi
+
+  NAME="${NAME:-$DATABASE}"
 
   BACKUP_DIR="/backups"
 
@@ -67,18 +72,13 @@ check_env() {
 
 backup_sql() {
   local DATE=$(date +%Y%m%d-%H%M%S)
-  local DUMP_NAME="${NAME}_${DATE}.tar.bz2"
+  local DUMP_NAME="${NAME}_${DATE}.sql.bz2"
   local FILE_NAME="/backups/${FULLNAME:-$DUMP_NAME}"
 
   log_info Backuping mysql into ${FILE_NAME} ...
 
-  set +u
-  mysqldump -q -h ${HOST} --single-transaction -A --user=${USER} --password=${PASSWORD} &> /tmp/dump.log | pbzip2 > ${FILE_NAME}
-  if [ $? -ne 0 ]; then 
-    cat /tmp/dump.log
-    exit $1
-  fi
-  set -u
+  mysqldump -q -h ${HOST} --single-transaction --user=${USER} --password=${PASSWORD} ${DATABASE} | pbzip2 > ${FILE_NAME}
+
   log_info Backup done
 }
 
